@@ -6,21 +6,17 @@
   <meta name="color-scheme" content="dark">
   <meta name="robots" content="noindex, nofollow">
   <title>Cosmic Forge - You found tomorrow</title>
+  <link rel="stylesheet" href="../assets/sky.css">
   <style>
     :root{color-scheme:dark;--bg:#080e1d;--ink:#f3f0e8;--muted:#aeb9cc;--gold:#edca86}
     *{box-sizing:border-box}
     body{margin:0;min-height:100vh;min-height:100svh;display:grid;place-items:center;padding:32px 24px;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Arial,sans-serif;isolation:isolate}
-    body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 50% 42%,#26365066,transparent 52%),radial-gradient(ellipse at 10% 75%,#33264244,transparent 48%),radial-gradient(1px 1px at 13px 23px,#d2e4ff55 99%,transparent) 0 0/137px 169px,radial-gradient(1px 1px at 72px 93px,#d2e4ff30 99%,transparent) 0 0/211px 227px}
     main{width:min(100%,560px);text-align:center}
     .eyebrow{margin:0 0 25px;color:var(--gold);font-size:10px;letter-spacing:.22em;line-height:1.8;text-transform:uppercase}
-    .star{position:relative;display:block;width:128px;height:128px;margin:0 auto 30px;border:0;border-radius:50%;padding:0;background:radial-gradient(circle,#edca8612,transparent 68%);color:var(--gold);touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-    .star:not(:disabled){cursor:pointer}
-    .star:focus-visible{outline:2px solid #b4e6f0;outline-offset:7px}
+    .star{width:128px;height:128px;margin:0 auto 30px;background:radial-gradient(circle,#edca8612,transparent 68%)}
     .star svg{display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 0 10px #edca8666);animation:twinkle 4.5s ease-in-out infinite}
-    .spark{position:absolute;left:calc(50% - 3px);top:calc(50% - 3px);width:6px;height:6px;opacity:0;pointer-events:none;background:#f7dba1;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%)}
     h1{margin:0;font-family:Georgia,"Times New Roman",serif;font-size:clamp(35px,5vw,52px);font-weight:400;letter-spacing:-.04em;line-height:1.15}
     .dream{margin:17px 0 0;color:var(--muted);font-size:15px;line-height:1.8}
-    .secret{min-height:3em;margin:35px 0 0;color:var(--gold);font-size:13px;line-height:1.7;letter-spacing:.02em}
     @keyframes twinkle{0%,100%{opacity:.7;transform:scale(.95)}50%{opacity:1;transform:scale(1.04)}}
     @media(prefers-reduced-motion:reduce){.star svg{animation:none}}
   </style>
@@ -28,7 +24,7 @@
 <body>
   <main>
     <p class="eyebrow">002 &nbsp; / &nbsp; You found tomorrow</p>
-    <button class="star" type="button" aria-label="Touch the star" disabled>
+    <div class="star" aria-hidden="true">
       <svg viewBox="0 0 120 120" aria-hidden="true" focusable="false">
         <defs>
           <radialGradient id="starlight">
@@ -39,42 +35,9 @@
         </defs>
         <path fill="url(#starlight)" d="M60 14 L65 53 L94 60 L65 66 L60 106 L54 67 L26 60 L54 53 Z"/>
       </svg>
-      <span id="sparkles" aria-hidden="true"></span>
-    </button>
+    </div>
     <h1>You&rsquo;re a little early.</h1>
     <p class="dream">The next chapter is still dreaming.</p>
-    <p id="secret" class="secret" role="status" aria-live="polite" aria-atomic="true"></p>
-    <noscript>
-      <style>#secret{display:none}</style>
-      <p class="secret">Caught you peeking. &#10022;</p>
-    </noscript>
   </main>
-  <script>
-    const star = document.querySelector(".star");
-    const secret = document.querySelector("#secret");
-    const motion = matchMedia("(prefers-reduced-motion: reduce)");
-    const directions = [[0,-78],[54,-54],[78,0],[54,54],[0,78],[-54,54],[-78,0],[-54,-54]];
-    const particles = directions.map(([x,y]) => {
-      const element = document.createElement("span");
-      element.className = "spark";
-      document.querySelector("#sparkles").append(element);
-      return {element,x,y};
-    });
-    function stopSparkles() {
-      particles.forEach(({element}) => element.getAnimations().forEach(animation => animation.cancel()));
-    }
-    motion.addEventListener("change", stopSparkles);
-    star.addEventListener("click", () => {
-      if (!secret.textContent) secret.textContent = "Caught you peeking. \u2726";
-      stopSparkles();
-      if (motion.matches) return;
-      particles.forEach(({element,x,y}) => element.animate([
-        {transform:"translate(0,0) scale(.3)",opacity:0},
-        {opacity:1,offset:.15},
-        {transform:`translate(${x}px,${y}px) scale(.15)`,opacity:0}
-      ], {duration:950,easing:"cubic-bezier(.16,1,.3,1)"}));
-    });
-    star.disabled = false;
-  </script>
 </body>
 </html>
