@@ -10,34 +10,111 @@
   <style>
     :root{color-scheme:dark;--bg:#080e1d;--ink:#f3f0e8;--muted:#aeb9cc;--gold:#edca86}
     *{box-sizing:border-box}
-    body{margin:0;min-height:100vh;min-height:100svh;display:grid;place-items:center;padding:32px 24px;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Arial,sans-serif;isolation:isolate}
-    main{width:min(100%,560px);text-align:center}
-    .eyebrow{margin:0 0 25px;color:var(--gold);font-size:10px;letter-spacing:.22em;line-height:1.8;text-transform:uppercase}
-    .star{width:128px;height:128px;margin:0 auto 30px;background:radial-gradient(circle,#edca8612,transparent 68%)}
-    .star svg{display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 0 10px #edca8666);animation:twinkle 4.5s ease-in-out infinite}
-    h1{margin:0;font-family:Georgia,"Times New Roman",serif;font-size:clamp(35px,5vw,52px);font-weight:400;letter-spacing:-.04em;line-height:1.15}
-    .dream{margin:17px 0 0;color:var(--muted);font-size:15px;line-height:1.8}
-    @keyframes twinkle{0%,100%{opacity:.7;transform:scale(.95)}50%{opacity:1;transform:scale(1.04)}}
-    @media(prefers-reduced-motion:reduce){.star svg{animation:none}}
+    [hidden]{display:none!important}
+    body{margin:0;min-height:100vh;min-height:100svh;display:grid;place-items:center;padding:12px;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Arial,sans-serif;isolation:isolate}
+    main{width:min(100%,440px);text-align:center}
+    .scene{display:block;width:100%;height:auto}
+    .label{font:10px "Segoe UI",Arial,sans-serif;letter-spacing:2px;fill:var(--gold)}
+    .headline{font:31px Georgia,"Times New Roman",serif;letter-spacing:-1px;fill:var(--ink)}
+    .subtitle{font:13px "Segoe UI",Arial,sans-serif;fill:var(--muted)}
+    .marks{visibility:hidden}
+    main[data-ready=true] .marks{visibility:visible}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+    #art-error{font-size:13px;line-height:1.6;color:var(--muted)}
   </style>
 </head>
 <body>
-  <main>
-    <p class="eyebrow">002 &nbsp; / &nbsp; You found tomorrow</p>
-    <div class="star" aria-hidden="true">
-      <svg viewBox="0 0 120 120" aria-hidden="true" focusable="false">
-        <defs>
-          <radialGradient id="starlight">
-            <stop offset="0" stop-color="#fffcef"/>
-            <stop offset=".3" stop-color="#ffe6ac"/>
-            <stop offset="1" stop-color="#c89848"/>
-          </radialGradient>
-        </defs>
-        <path fill="url(#starlight)" d="M60 14 L65 53 L94 60 L65 66 L60 106 L54 67 L26 60 L54 53 Z"/>
-      </svg>
-    </div>
-    <h1>You&rsquo;re a little early.</h1>
-    <p class="dream">The next chapter is still dreaming.</p>
+  <main aria-labelledby="heading">
+    <h1 id="heading" class="sr-only">You&rsquo;re a little early.</h1>
+    <p class="dream sr-only">The next chapter is still dreaming.</p>
+    <svg class="scene" viewBox="0 0 390 660" aria-hidden="true" focusable="false">
+      <g class="marks">
+        <image href="../assets/tomorrow-mark-a.png" x="145" y="302" width="10" height="10"/>
+        <image href="../assets/tomorrow-mark-b.png" x="220" y="302" width="10" height="10"/>
+        <image href="../assets/tomorrow-mark-c.png" x="172" y="302" width="10" height="10"/>
+        <image href="../assets/tomorrow-mark-d.png" x="190" y="350" width="10" height="10"/>
+        <image href="../assets/tomorrow-mark-e.png" x="190" y="266" width="10" height="10"/>
+      </g>
+      <text x="195" y="171" text-anchor="middle" class="label">002 / YOU FOUND TOMORROW</text>
+      <text x="195" y="457" text-anchor="middle" class="headline">You&rsquo;re a little early.</text>
+      <text x="195" y="490" text-anchor="middle" class="subtitle">The next chapter is still dreaming.</text>
+      <image class="stationary-dots" href="../assets/tomorrow-dots.png" x="45" y="160.17241379310346" width="300" height="289.6551724137931"/>
+      <g class="star" transform="translate(0 -0.5)">
+        <image href="../assets/tomorrow-star.png" x="45" y="160.17241379310346" width="300" height="289.6551724137931"/>
+      </g>
+    </svg>
+    <p id="art-error" role="status" hidden>The starlight could not load. Please refresh to try again.</p>
   </main>
+  <script>
+  (() => {
+    "use strict";
+    const geometry = {initial_range:0.5,first_edge_range:2.9,final_range:90,speed_px_per_second:0.75};
+    const state = {elapsed:0,offset:-0.5,direction:1};
+    const motion = matchMedia("(prefers-reduced-motion: reduce)");
+    const star = document.querySelector(".star");
+    let ready = false;
+    let lastFrame = null;
+    let frameId = null;
+
+    function amplitude(seconds) {
+      if (seconds <= 300) {
+        return geometry.initial_range + (geometry.first_edge_range-geometry.initial_range)*seconds/300;
+      }
+      return geometry.first_edge_range + (geometry.final_range-geometry.first_edge_range)*(seconds-300)/3300;
+    }
+    function advance(delta) {
+      let remaining=delta;
+      while (remaining>1e-8) {
+        const boundary=state.elapsed<300 ? 300 : state.elapsed<3600 ? 3600 : Infinity;
+        const growth=state.elapsed<300 ? (geometry.first_edge_range-geometry.initial_range)/300 :
+          state.elapsed<3600 ? (geometry.final_range-geometry.first_edge_range)/3300 : 0;
+        const hit=Math.max(0,(amplitude(state.elapsed)-state.direction*state.offset)/(geometry.speed_px_per_second-growth));
+        const step=Math.min(remaining,boundary-state.elapsed,hit);
+        state.offset+=state.direction*geometry.speed_px_per_second*step;
+        state.elapsed=Math.min(3600,state.elapsed+step);
+        remaining-=step;
+        if (hit<=step+1e-8) state.direction*=-1;
+      }
+    }
+    function frame(now) {
+      frameId = null;
+      if (!ready || document.hidden || motion.matches) {
+        lastFrame = null;
+        return;
+      }
+      if (lastFrame !== null) advance((now-lastFrame)/1000);
+      lastFrame = now;
+      star.setAttribute("transform",`translate(0 ${state.offset})`);
+      frameId = requestAnimationFrame(frame);
+    }
+    function syncMotion() {
+      if (frameId !== null) cancelAnimationFrame(frameId);
+      frameId = null;
+      lastFrame = null;
+      if (ready && !document.hidden && !motion.matches) frameId = requestAnimationFrame(frame);
+    }
+    document.addEventListener("visibilitychange",syncMotion);
+    motion.addEventListener("change",syncMotion);
+    window.addEventListener("pageshow",syncMotion);
+    window.addEventListener("pagehide",() => {
+      if (frameId !== null) cancelAnimationFrame(frameId);
+      frameId = null;
+      lastFrame = null;
+    });
+    Promise.all([...document.querySelectorAll(".scene image")].map(element => new Promise((resolve,reject) => {
+      const image = new Image();
+      image.onload = resolve;
+      image.onerror = () => reject(new Error("Could not load the page artwork."));
+      image.src = element.getAttribute("href");
+    }))).then(() => {
+      ready = true;
+      document.querySelector("main").dataset.ready = "true";
+      syncMotion();
+    }).catch(error => {
+      document.querySelector("#art-error").hidden = false;
+      console.error(error);
+    });
+  })();
+  </script>
 </body>
 </html>
